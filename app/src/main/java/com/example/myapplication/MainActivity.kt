@@ -1,13 +1,14 @@
-package com.example.myapplication // Make sure this matches your actual package name!
+package com.example.myapplicationweather342
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,90 +17,88 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
+    private val weatherViewModel: WeatherViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            WeatherUI() // Calls the composable function to display the weather screen
+            WeatherScreen(weatherViewModel)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WeatherUI() {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Application Title Bar
+fun WeatherScreen(weatherViewModel: WeatherViewModel = viewModel()) {
+    val weatherState by weatherViewModel.weatherData.collectAsState()
+
+    LaunchedEffect(Unit) {
+        if (weatherState == null) {
+            weatherViewModel.fetchWeatherByCoordinates(44.34, 10.99, "0f61d4ac2507933fd147c5105db3ac8f")
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text(text = "Weather Finder", color = Color.Black) },
+            title = { Text("Weather Finder", color = Color.Black) },
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.Gray)
+                .background(Color.Gray),
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Centralized Weather Information Display
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "St. Paul, MN",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = "72°",
-                fontSize = 65.sp,
-                fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Center
-            )
-
-            Text(
-                text = "Feels like 78°",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Display Weather Icon
-            Image(
-                painter = painterResource(id = R.mipmap.ic_launcher_foreground),
-                contentDescription = "Weather Condition Icon",
-                modifier = Modifier.size(55.dp)
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // Additional Weather Details
+        weatherState?.let { weather ->
             Column(
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                WeatherDetailRow("Low", "65°")
-                WeatherDetailRow("High", "80°")
-                WeatherDetailRow("Humidity", "100%")
-                WeatherDetailRow("Pressure", "1023 hPa")
+                Text(weather.cityName, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "${weather.main.temperature}°",
+                    fontSize = 64.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+
+                Text("Feels like ${weather.main.temperature}°", fontSize = 14.sp, color = Color.Gray)
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Image(
+                    painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                    contentDescription = "Weather Icon",
+                    modifier = Modifier.size(50.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column {
+                    Text("Humidity: ${weather.main.humidity}%", fontSize = 16.sp)
+                    Text("Description: ${weather.weather[0].description}", fontSize = 16.sp)
+                }
             }
+        } ?: run {
+            Text(
+                text = "Loading weather...",
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                fontSize = 20.sp,
+                color = Color.Gray
+            )
         }
     }
 }
 
-// Helper Composable for Weather Details
-@Composable
-fun WeatherDetailRow(label: String, value: String) {
-    Text(
-        text = "$label: $value",
-        fontSize = 16.sp
-    )
-}
+
+
+
+
+
+
+
