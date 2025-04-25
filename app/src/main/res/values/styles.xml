@@ -1,3 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Leave empty or define unrelated styles only -->
+    <!-- Application’s main theme, based on Material3 DayNight with no action bar -->
+    <style name="Theme.MyApplication" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- You can customize your colors here, or leave empty if you handle everything in Compose -->
+        <!--
+        <item name="colorPrimary">@color/md_theme_light_primary</item>
+        <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
+        …
+        -->
+    </style>
 </resources>

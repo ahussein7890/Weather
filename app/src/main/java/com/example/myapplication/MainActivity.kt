@@ -1,34 +1,43 @@
-package com.example.myapplicationweather342
+package com.example.myapplication
 
+import android.Manifest
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.Image
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
+
+import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
+
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -39,35 +48,73 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val navController = rememberNavController()
-            WeatherNavGraph(navController, weatherViewModel)
+            WeatherNavGraph(weatherViewModel)
         }
     }
 }
 
+// ----------------
+// Composables
+// ----------------
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WeatherNavGraph(navController: NavHostController, weatherViewModel: WeatherViewModel) {
-    NavHost(navController = navController, startDestination = "weather") {
+fun WeatherNavGraph(weatherViewModel: WeatherViewModel) {
+    val navController = rememberNavController()
+    NavHost(navController, startDestination = "weather") {
         composable("weather") {
-            WeatherScreen(navController = navController, weatherViewModel = weatherViewModel)
+            WeatherScreen(navController, weatherViewModel)
         }
         composable("forecast") {
-            ForecastScreen(viewModel = weatherViewModel)
+            // Pass the same navController so ForecastScreen can pop back
+            ForecastScreen(
+                viewModel     = weatherViewModel,
+                navController = navController
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WeatherScreen(navController: NavController, weatherViewModel: WeatherViewModel) {
+fun WeatherScreen(
+    navController: NavController,
+    weatherViewModel: WeatherViewModel
+) {
+    val context = LocalContext.current
     val weatherState by weatherViewModel.weatherData.collectAsState()
     var zipCode by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
+    // 1) Launcher for location permission
+    val locationLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            // start your foreground service for ongoing notifications
+            ContextCompat.startForegroundService(
+                context,
+                Intent(context, LocationWeatherService::class.java)
+            )
+            // immediately fetch and display UI weather for current location
+            weatherViewModel.fetchWeatherByLocation()
+        }
+    }
+
+    // 2) Launcher for notifications (Android 13+)
+    val notifyLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* no‐op */ }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Weather Finder", color = Color.Black) },
+                title = {
+                    Text(
+                        stringResource(R.string.weather_finder_title),
+                        color = Color.Black
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.Gray)
@@ -75,18 +122,21 @@ fun WeatherScreen(navController: NavController, weatherViewModel: WeatherViewMod
         }
     ) { padding ->
         Column(
-            modifier = Modifier
+            Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
+            // ZIP code input
             OutlinedTextField(
                 value = zipCode,
-                onValueChange = { if (it.length <= 5 && it.all { c -> c.isDigit() }) zipCode = it },
-                label = { Text("Enter ZIP Code") },
+                onValueChange = {
+                    if (it.all(Char::isDigit) && it.length <= 5) zipCode = it
+                },
+                label = { Text(stringResource(R.string.label_zip_code)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
@@ -98,79 +148,96 @@ fun WeatherScreen(navController: NavController, weatherViewModel: WeatherViewMod
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.height(8.dp))
 
+            // My Location button
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(onClick = {
+                    // request fine‐location
+                    locationLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                    // post notifications if needed
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        notifyLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }) {
+                    Icon(
+                        Icons.Filled.MyLocation,
+                        contentDescription = stringResource(R.string.desc_my_location)
+                    )
+                }
+            }
+
+            // ZIP-based weather & forecast buttons
+            Row(
+                Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(
                     onClick = {
                         if (zipCode.length == 5) {
-                            weatherViewModel.fetchWeatherByZipCode(zipCode, "0f61d4ac2507933fd147c5105db3ac8f")
+                            weatherViewModel.fetchWeatherByZipCode(zipCode)
                             focusManager.clearFocus()
                         }
                     },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Get Weather")
+                    Text(stringResource(R.string.button_get_weather))
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(Modifier.width(8.dp))
 
                 Button(
                     onClick = {
                         if (zipCode.length == 5) {
-                            weatherViewModel.fetchForecastByZipCode(zipCode, "0f61d4ac2507933fd147c5105db3ac8f")
+                            weatherViewModel.fetchForecastByZipCode(zipCode)
                             focusManager.clearFocus()
                             navController.navigate("forecast")
                         }
                     },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("View Forecast")
+                    Text(stringResource(R.string.button_view_forecast))
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-            weatherState?.let { weather ->
+            // Display current weather or loading state
+            weatherState?.let { w ->
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(weather.cityName, fontSize = 18.sp, fontWeight = FontWeight.Medium)
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(w.cityName, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "${weather.main.temperature}°",
+                        "${w.main.temperature}°",
                         fontSize = 64.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
-                    Text("Feels like ${weather.main.temperature}°", fontSize = 14.sp, color = Color.Gray)
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Image(
-                        painter = painterResource(id = R.mipmap.ic_launcher_foreground),
-                        contentDescription = "Weather Icon",
-                        modifier = Modifier.size(50.dp)
+                    Text(
+                        "Feels like ${w.main.temperature}°",
+                        fontSize = 14.sp,
+                        color = Color.Gray
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Column {
-                        Text("Humidity: ${weather.main.humidity}%", fontSize = 16.sp)
-                        Text("Description: ${weather.weather[0].description}", fontSize = 16.sp)
-                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text("Humidity: ${w.main.humidity}%", fontSize = 16.sp)
+                    Text(w.weather.first().description, fontSize = 16.sp)
                 }
             } ?: run {
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(Modifier.weight(1f))
                 Text(
-                    text = "Loading weather...",
+                    stringResource(R.string.loading_weather),
                     fontSize = 20.sp,
                     color = Color.Gray
                 )
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(Modifier.weight(1f))
             }
         }
     }

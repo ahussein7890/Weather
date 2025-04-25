@@ -1,3 +1,23 @@
 <resources>
+    <!-- App -->
     <string name="app_name">My Application</string>
+
+    <!-- Main Screen -->
+    <string name="weather_finder_title">Weather Finder</string>
+    <string name="label_zip_code">Enter ZIP Code</string>
+    <string name="button_get_weather">Get Weather</string>
+    <string name="button_view_forecast">View Forecast</string>
+    <string name="button_my_location">My Location</string>
+    <string name="desc_my_location">Get weather for current location</string>
+    <string name="loading_weather">Loading weather…</string>
+    <string name="error_invalid_zip">Please enter a 5-digit ZIP code</string>
+
+    <!-- Forecast Screen -->
+    <string name="forecast_screen_title">5-Day Forecast</string>
+    <!-- Back button -->
+    <string name="back">Back</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">Weather Updates</string>
+    <string name="notification_channel_desc">Shows current weather in status bar</string>
 </resources>

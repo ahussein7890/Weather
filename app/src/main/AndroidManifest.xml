@@ -1,9 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.myapplicationweather342">
+    package="com.example.myapplication">
 
     <!-- network -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <!-- location -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <!-- foreground service (API 31+ requires both) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+
+    <!-- notifications (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
         android:allowBackup="true"
@@ -11,8 +22,15 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MyApplicationWeather342">
+        android:theme="@style/Theme.MyApplication">  <!-- ← use your actual theme name -->
 
+        <!-- Foreground service for location-based weather updates -->
+        <service
+            android:name=".LocationWeatherService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <!-- Main entry point -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
