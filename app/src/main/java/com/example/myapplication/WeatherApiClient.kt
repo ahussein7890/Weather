@@ -20,9 +20,8 @@ object WeatherApiClient {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create()) // ✅ Stick with Gson for simplicity
             .build()
             .create(WeatherApiService::class.java)
     }
 }
-

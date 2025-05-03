@@ -10,12 +10,10 @@ data class WeatherResponse(
 
 data class Main(
     @SerializedName("temp") val temperature: Double,
+    @SerializedName("feels_like") val feelsLike: Double,
     @SerializedName("humidity") val humidity: Int
 )
 
 data class Weather(
     @SerializedName("description") val description: String
 )
-
-
-

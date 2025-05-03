@@ -1,3 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">My Weather App</string>
+    <string name="weather_finder_title">Weather Finder</string>
+    <string name="label_zip_code">Enter ZIP Code</string>
+    <string name="button_get_weather">Get Weather</string>
+    <string name="desc_my_location">Get weather for current location</string>
+    <string name="loading_weather">Loading weather…</string>
+
+    <string name="temperature_format">%.0f&#176;</string>
+    <string name="feels_like_format">Feels like %.0f&#176;</string>
+    <string name="humidity_format">Humidity %d%%</string>
+
+    <!-- ✅ ADD THIS -->
+    <string name="desc_sunny_icon">Sunny Weather Icon</string>
 </resources>
