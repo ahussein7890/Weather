@@ -1,3 +1,12 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">My Weather App</string>
+    <string name="desc_sunny_icon">Sunny Weather Icon</string>
+    <string name="temperature">72&#176;</string>
+    <string name="feels_like">Feels like 78&#176;</string>
+    <string name="weather_description">Clear Skies</string>
+    <string name="location">St. Paul, MN</string>
+    <string name="low_temp">Low 65&#176;</string>
+    <string name="high_temp">High 80&#176;</string>
+    <string name="humidity">Humidity 100%</string>
+    <string name="pressure">Pressure 1023 hPa</string>
 </resources>

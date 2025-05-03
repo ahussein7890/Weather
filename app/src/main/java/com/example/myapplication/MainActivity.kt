@@ -3,102 +3,81 @@ package com.example.myapplicationweather342
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
-    private val weatherViewModel: WeatherViewModel by viewModels()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            WeatherScreen(weatherViewModel)
+            MaterialTheme {
+                StaticWeatherScreen()
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WeatherScreen(weatherViewModel: WeatherViewModel = viewModel()) {
-    val weatherState by weatherViewModel.weatherData.collectAsState()
-
-    LaunchedEffect(Unit) {
-        if (weatherState == null) {
-            weatherViewModel.fetchWeatherByCoordinates(44.34, 10.99, "0f61d4ac2507933fd147c5105db3ac8f")
-        }
-    }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("Weather Finder", color = Color.Black) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.Gray),
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        weatherState?.let { weather ->
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(weather.cityName, fontSize = 18.sp, fontWeight = FontWeight.Medium)
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "${weather.main.temperature}°",
-                    fontSize = 64.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-
-                Text("Feels like ${weather.main.temperature}°", fontSize = 14.sp, color = Color.Gray)
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Image(
-                    painter = painterResource(id = R.mipmap.ic_launcher_foreground),
-                    contentDescription = "Weather Icon",
-                    modifier = Modifier.size(50.dp)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Column {
-                    Text("Humidity: ${weather.main.humidity}%", fontSize = 16.sp)
-                    Text("Description: ${weather.weather[0].description}", fontSize = 16.sp)
+fun StaticWeatherScreen() {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(text = stringResource(R.string.app_name))
                 }
-            }
-        } ?: run {
-            Text(
-                text = "Loading weather...",
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                fontSize = 20.sp,
-                color = Color.Gray
             )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = stringResource(R.string.location), fontSize = 20.sp)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Centered row for temperature and icon
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(R.string.temperature),
+                    fontSize = 48.sp
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.ic_launcher_background),
+                    contentDescription = stringResource(R.string.desc_sunny_icon),
+                    modifier = Modifier.size(60.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(text = stringResource(R.string.feels_like), fontSize = 16.sp)
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Column(horizontalAlignment = Alignment.Start) {
+                Text(text = stringResource(R.string.low_temp))
+                Text(text = stringResource(R.string.high_temp))
+                Text(text = stringResource(R.string.humidity))
+                Text(text = stringResource(R.string.pressure))
+            }
         }
     }
 }
-
-
-
-
-
-
-
-
